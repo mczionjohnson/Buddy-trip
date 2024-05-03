@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "Ride-sharing app",
   "main": "start.js",
+  "type": "module",
   "scripts": {
     "test": "jest",
-    "dev": "nodemon start.js"
+    "dev": "nodemon "
   },
   "repository": {
     "type": "git",
