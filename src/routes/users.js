@@ -14,8 +14,8 @@ import updateProfileValidation from '../middleware/validations/update_profile.js
 
 const userRouter = express.Router();
 
-userRouter.get('/', checkAuth, Users.getAllUsers);
-// userRouter.get('/:id', checkAuth, Users.getOneUser);
+// userRouter.get('/', checkAuth, Users.getAllUsers);
+userRouter.get('/:id', checkAuth, Users.getOneUser);
 // userRouter.put('/:id/profile', checkAuth, updateProfileValidation, Users.updateUserProfile);
 // userRouter.put('/:id/password', checkAuth, updatePasswordValidation, Users.updateUserPassword);
 // userRouter.put('/:id/photo', checkAuth, updatePhotoValidation, Users.updateUserPhoto);

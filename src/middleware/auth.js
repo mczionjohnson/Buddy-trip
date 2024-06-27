@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
-import logger from '../logger/logger.js'
+import logger from "../logger/logger.js";
+import dotenv from "dotenv";
 
+dotenv.config();
+const secret = process.env.JWT_SECRET_TOKEN;
 
 const checkAuth = (req, res, next) => {
   // logger.debug("Auth middleware");
@@ -16,13 +19,15 @@ const checkAuth = (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized2" });
   }
   // logger.debug("Token", bearerToken[1]);
-  jwt.verify(bearerToken[1], process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(bearerToken[1], secret, (err, decoded) => {
     if (err) {
+      console.log(err);
       return res.status(401).json({ message: "Unauthorized3" });
-    }
-    // logger.debug("Decoded", decoded);
-    req.user = decoded;
+    } else {
+      // logger.debug("Decoded", decoded);
+      req.user = decoded;
       next();
+    }
   });
 };
 

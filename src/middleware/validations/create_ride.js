@@ -91,7 +91,7 @@ const validate = async (req, res, next) => {
 
     const findDuplicateRide = await Ride.find({
       $and: [
-        { user: req.authData._id },
+        { user: req.user._id },
         { departureTime: req.body.departureTime },
         { departureDate: processedDate },
       ],
@@ -99,6 +99,7 @@ const validate = async (req, res, next) => {
     console.log(findDuplicateRide.length);
 
     if (findDuplicateRide.length <= 0) {
+      console.log("no duplicate ride found, proceed")
       next();
     } else {
       res.status(400).json({

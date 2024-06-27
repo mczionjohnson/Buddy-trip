@@ -19,14 +19,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 connection();
 
 app.use("/v1", indexRouter);
-app.use("/v1/auth", authRouter);
-app.use("/v1/users", userRouter);
-app.use("/v1/rides", rideRouter);
+app.use("/v1/a", authRouter);
+app.use("/v1/u", userRouter);
+app.use("/v1/r", rideRouter);
 
 app.all("*", (req, res) => {
   res.status(404).json({
     status: "error",
-    message: "Not found",
+    message: "Page not found",
   });
 });
 

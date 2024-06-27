@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import Ride from "../models/rideSchema.js";
+import RideOffer from "../models/rideOfferSchema.js";
 import processDate from "../util/process_date.js";
 
 dotenv.config();
@@ -13,7 +14,7 @@ class Rides {
       res.status(200).json({
         status: "success",
         message: `${countAllRides} ride offer(s) found`,
-        findAllRides,
+        Rides: findAllRides,
       });
     } catch (error) {
       res.status(500).json({
@@ -26,9 +27,9 @@ class Rides {
   static async getOneRideOffer(req, res) {
     // db.query('SELECT * FROM ride_offers WHERE id=$1', [req.params.id])
     try {
-      const { id } = req.params;
+      const id = req.params.id;
       const singleRide = await Ride.findOne({ _id: id });
-      if (singleRide <= 0) {
+      if (singleRide == null) {
         return res.status(404).json({
           status: "error",
           message: "Ride Offer does not exist",
@@ -37,7 +38,7 @@ class Rides {
         return res.status(200).json({
           status: "success",
           message: "Ride Offer found",
-          singleRide,
+          Ride: singleRide,
         });
       }
     } catch (error) {
@@ -48,7 +49,7 @@ class Rides {
     }
   }
 
-  static createRideOffer(req, res) {
+  static async createRideOffer(req, res) {
     try {
       const {
         startLocation,
@@ -65,7 +66,7 @@ class Rides {
       const processedDate = processDate(departureDate);
 
       const ride = new Ride({
-        user: req.authData._id,
+        user: req.user._id,
         startLocation: startLocation,
         destination: destination,
         seats: seats,
@@ -74,22 +75,22 @@ class Rides {
         departureTime: departureTime,
       });
 
-      const newestRide = ride
-        .save()
-        .then((result) => {
-          res.status(201).json({
-            status: "success",
-            message: "Ride offer was successfully created",
-            result,
-          });
-        })
-        .catch(() => {
-          res.json({
-            status: "error 2",
-            message: "Internal server error. Please try again later",
-            error: error.message,
-          });
+      const newestRide = await ride.save();
+      if (newestRide != null) {
+        console.log(newestRide);
+        res.status(201).json({
+          status: "success",
+          message: "Ride offer was successfully created",
+          Ride: newestRide,
         });
+      } else {
+        console.log(error);
+        res.json({
+          status: "error 2",
+          message: "Internal server error. Please try again later",
+          error: error.message,
+        });
+      }
     } catch (error) {
       console.log(error);
       res.json({
@@ -100,93 +101,95 @@ class Rides {
     }
   }
 
-  static async deleteOneRideOffer(req, res) {
+  // static async deleteOneRideOffer(req, res) {
+  //   try {
+  //     const { id } = req.params;
+  //     const user_id = req.authData._id;
+  //     // db.query('SELECT * FROM ride_offers WHERE id=$1', [req.params.id])
+  //     const singleRide = await Ride.findOne({ _id: id });
+
+  //     console.log(singleRide.user, user_id);
+
+  //     if (singleRide.user.equals(user_id)) {
+  //       // db.query('DELETE FROM ride_offers WHERE id=$1', [req.params.id])
+  //       const deletedRide = await Ride.deleteOne({ _id: id });
+  //       res.status(200).json({
+  //         status: "success",
+  //         message: "Ride Offer was deleted successfully",
+  //       });
+  //     } else {
+  //       res.status(403).json({
+  //         status: "error",
+  //         message: "You don't have permission to delete this Ride Offer",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     res.status(500).json({
+  //       status: "error",
+  //       message: "Internal server error. Please try again later",
+  //       error: error.message,
+  //     });
+  //   }
+  // }
+
+  static async createRideOfferRequest(req, res) {
     try {
-      const { id } = req.params;
-      const user_id = req.authData._id;
-      // db.query('SELECT * FROM ride_offers WHERE id=$1', [req.params.id])
-      const singleRide = await Ride.findOne({ _id: id });
+      const id = req.params.id;
 
-      console.log(singleRide.user, user_id);
-
-      if (singleRide.user.equals(user_id)) {
-        // db.query('DELETE FROM ride_offers WHERE id=$1', [req.params.id])
-        const deletedRide = await Ride.deleteOne({ _id: id });
-        res.status(200).json({
-          status: "success",
-          message: "Ride Offer was deleted successfully",
+      const result = await Ride.find({ _id: id });
+      if (result.length < 1) {
+        // if (result.rowCount < 1) {
+        res.status(404).json({
+          status: "error",
+          message: "Ride Offer does not exist",
         });
       } else {
-        res.status(403).json({
-          status: "error",
-          message: "You don't have permission to delete this Ride Offer",
+        if (result.user === req.user._id) {
+          res.status(400).json({
+            status: "error",
+            message: "You cannot request for your Ride Offer",
+          });
+        }
+        if (result[0].seat < 1) {
+          res.status(400).json({
+            status: "error",
+            message:
+              "No available seat! You cannot request for this Ride Offer",
+          });
+        }
+        const data = {
+          ride: req.params.id,
+          user: req.user._id,
+          username: req.user.username,
+        };
+        const request = new RideOffer({
+          ...data,
         });
+        try {
+          const newRequest = request.save();
+          if (newRequest != null) {
+            res.status(201).json({
+              status: "success",
+              message: "Request was successfully made",
+              request: request,
+            });
+          }
+        } catch (error) {
+          console.log(error.message);
+          res.status(201).json({
+            status: "error",
+            message: "Error creating request",
+          });
+        }
       }
     } catch (error) {
+      console.log(error.message);
       res.status(500).json({
         status: "error",
         message: "Internal server error. Please try again later",
-        error: error.message,
       });
     }
   }
-
-  // static createRideOfferRequest(req, res) {
-  //   db.query('SELECT * FROM ride_offers WHERE id=$1', [req.params.id])
-  //     .then((result) => {
-  //       if (result.rowCount < 1) {
-  //         res.status(404).json({
-  //           status: 'error',
-  //           message: 'Ride Offer does not exist',
-  //         });
-  //       } else {
-  //         if(result.rows[0].user_id === req.authData.user.id) {
-  //           res.status(400).json({
-  //             status: 'error',
-  //             message: 'You cannot request for your Ride Offer',
-  //           });
-  //         } else {
-  //           if (result.rows[0].seat < 1) {
-  //             res.status(400).json({
-  //               status: 'error',
-  //               message: 'No available seat! You cannot request for this Ride Offer',
-  //             });
-  //           } else {
-  //             const data = [
-  //               randomstring.generate(10),
-  //               req.params.id,
-  //               req.authData.user.id,
-  //               req.authData.user.name,
-  //               'pending',
-  //               new Date().toISOString(),
-  //               new Date().toISOString(),
-  //             ];
-
-  //             db.query('INSERT INTO ride_offer_requests(id, ride_id, user_id, user_name, status, updated_at, created_at) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *', data)
-  //               .then((result) => {
-  //                 res.status(201).json({
-  //                   status: 'success',
-  //                   message: 'Request was successfully made',
-  //                   request: result.rows[0],
-  //                 });
-  //               })
-  //               .catch(() => {
-  //                 res.status(500).json({
-  //                   status: 'error',
-  //                   message: 'Internal server error. Please try again later',
-  //                 });
-  //               });
-  //           }
-  //         }
-  //       }
-  //     })
-  //     .catch(() => {
-  //       res.status(500).json({
-  //         status: 'error',
-  //         message: 'Internal server error. Please try again later',
-  //       });
-  //     });
-  // }
 
   // static getRideOfferRequestsForOneRide(req, res) {
   //   db.query('SELECT * FROM ride_offers WHERE id=$1', [req.params.id])

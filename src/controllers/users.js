@@ -2,48 +2,50 @@ import bcrypt from "bcrypt";
 import User from "../models/userSchema.js";
 
 export default class Users {
-  static async getAllUsers(req, res) {
+  // static async getAllUsers(req, res) {
+  //   try {
+  //     // db.query('SELECT id, name, email, phone_number, photo, updated_at, created_at FROM users')
+  //     const findAllUsers = await User.find();
+  //     const countAllUsers = await findAllUsers.length;
+  //     res.status(200).json({
+  //       status: "success",
+  //       message: `${countAllUsers} user(s) found`,
+  //       findAllUsers,
+  //     });
+  //   } catch (error) {
+  //     res.status(500).json({
+  //       status: "error",
+  //       message: "Internal server error. Please try again later",
+  //       error: error.message,
+  //     });
+  //   }
+  // }
+
+  static async getOneUser(req, res) {
+    // db.query('SELECT id, name, email, phone_number, photo, updated_at, created_at FROM users WHERE id=$1', [req.params.id])
+    const id = req.params.id;
     try {
-      // db.query('SELECT id, name, email, phone_number, photo, updated_at, created_at FROM users')
-      const findAllUsers = await User.find();
-      const countAllUsers = await findAllUsers.length;
-      res.status(200).json({
-        status: "success",
-        message: `${countAllUsers} user(s) found`,
-        findAllUsers,
-      });
+      const findUser = await User.findOne({ _id: id });
+      if (findUser == null) {
+        return res.status(404).json({
+          status: "error",
+          message: "User was not found",
+        });
+      } else {
+        return res.status(200).json({
+          status: "success",
+          message: "User found",
+          findUser,
+        });
+      }
     } catch (error) {
-      res.status(500).json({
+      console.log(error);
+      return res.status(500).json({
         status: "error",
         message: "Internal server error. Please try again later",
-        error: error.message,
       });
     }
   }
-
-  // static getOneUser(req, res) {
-  //   db.query('SELECT id, name, email, phone_number, photo, updated_at, created_at FROM users WHERE id=$1', [req.params.id])
-  //     .then((firstResult) => {
-  //       if (firstResult.rowCount < 1) {
-  //         res.status(404).json({
-  //           status: 'error',
-  //           message: 'User was not found',
-  //         });
-  //       } else {
-  //         res.status(200).json({
-  //           status: 'success',
-  //           message: 'User found',
-  //           user: firstResult.rows[0],
-  //         });
-  //       }
-  //     })
-  //     .catch(() => {
-  //       res.status(500).json({
-  //         status: 'error',
-  //         message: 'Internal server error. Please try again later',
-  //       });
-  //     });
-  // }
 
   // static updateUserProfile(req, res) {
   //   const { name, phoneNumber } = req.body;

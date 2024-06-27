@@ -8,7 +8,7 @@ const rideRouter = express.Router();
 
 rideRouter.get('/', checkAuth, Rides.getAllRideOffers);
 rideRouter.get('/:id', checkAuth, Rides.getOneRideOffer);
-rideRouter.delete('/:id', checkAuth, Rides.deleteOneRideOffer);
-// rideRouter.post('/:id/requests', checkAuth, Rides.createRideOfferRequest);
+// rideRouter.delete('/:id', checkAuth, Rides.deleteOneRideOffer);
+rideRouter.post('/:id/requests', checkAuth, Rides.createRideOfferRequest);
 
 export default rideRouter;
